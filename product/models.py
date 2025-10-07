@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 
 class Category(models.Model):
@@ -21,6 +22,12 @@ class Product(models.Model):
 class Review(models.Model):
     text = models.TextField()
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="reviews")
+    
+    # НОВОЕ ПОЛЕ: stars для рейтинга от 1 до 5
+    stars = models.IntegerField(
+        default=5,
+        validators=[MinValueValidator(1), MaxValueValidator(5)]
+    )
 
     def __str__(self):
-        return f"Review for {self.product.title}"
+        return f"Review for {self.product.title} - {self.stars} stars"

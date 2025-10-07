@@ -22,12 +22,36 @@ urlpatterns = [
     path('admin/', admin.site.urls),
 
     # Categories
-    path('api/v1/categories/', views.CategoryListView.as_view(), name='category-list'),
-    path('api/v1/categories/<int:pk>/', views.CategoryDetailView.as_view(), name='category-detail'),
+    # 1. ОБНОВЛЕННЫЙ ПУТЬ: /api/v1/categories/ теперь использует View с подсчетом товаров
+    path(
+        'api/v1/categories/', 
+        views.CategoryProductCountListView.as_view(), 
+        name='category-list-with-count'
+    ),
+    path(
+        'api/v1/categories/<int:pk>/', 
+        views.CategoryDetailView.as_view(), 
+        name='category-detail'
+    ),
 
     # Products
-    path('api/v1/products/', views.ProductListView.as_view(), name='product-list'),
-    path('api/v1/products/<int:pk>/', views.ProductDetailView.as_view(), name='product-detail'),
+    # 2. НОВЫЙ ПУТЬ: /api/v1/products/reviews/ для вывода продуктов с рейтингом
+    path(
+        'api/v1/products/reviews/', 
+        views.ProductReviewsListView.as_view(), 
+        name='product-list-with-reviews'
+    ),
+    # Старый путь для стандартного списка продуктов остается
+    path(
+        'api/v1/products/', 
+        views.ProductListView.as_view(), 
+        name='product-list'
+    ),
+    path(
+        'api/v1/products/<int:pk>/', 
+        views.ProductDetailView.as_view(), 
+        name='product-detail'
+    ),
 
     # Reviews
     path('api/v1/reviews/', views.ReviewListView.as_view(), name='review-list'),
