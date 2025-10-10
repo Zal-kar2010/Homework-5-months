@@ -20,15 +20,23 @@ class ProductSerializer(serializers.ModelSerializer):
 class ReviewSerializer(serializers.ModelSerializer):
     product = ProductSerializer(read_only=True)
     product_id = serializers.PrimaryKeyRelatedField(queryset=Product.objects.all(), source='product', write_only=True)
-    # Добавляем поле stars
-    stars = serializers.IntegerField(read_only=True)
+    
+    # КРИТИЧЕСКОЕ ИЗМЕНЕНИЕ: УДАЛЕНО read_only=True для stars
+    # Теперь stars может быть передано в POST/PUT/PATCH запросах.
+    # Валидация (MinValueValidator/MaxValueValidator) будет применяться автоматически моделью.
+    stars = serializers.IntegerField() 
+    # В качестве альтернативы, можно было бы просто удалить эту строку, 
+    # так как stars автоматически включается в fields ниже.
 
     class Meta:
         model = Review
+        # Включаем stars в fields, чтобы обеспечить его запись и чтение.
         fields = ['id', 'text', 'stars', 'product', 'product_id']
 
 # ----------------------------------------------------------------------
 ## --- Сериализаторы для выполнения Домашнего Задания ---
+
+# Эти сериализаторы не требуют изменений, так как они используются только для чтения (GET) данных.
 
 # 1. Сериализатор для вложенных отзывов с полем stars
 class NestedReviewSerializer(serializers.ModelSerializer):
@@ -38,10 +46,7 @@ class NestedReviewSerializer(serializers.ModelSerializer):
 
 # 2. Сериализатор для товаров с рейтингом и отзывами (Эндпоинт: /products/reviews/)
 class ProductReviewsSerializer(serializers.ModelSerializer):
-    # Вложенные отзывы (используем related_name="reviews" из модели)
     reviews = NestedReviewSerializer(many=True, read_only=True)
-    
-    # Вычисляемое поле для среднего балла
     rating = serializers.SerializerMethodField()
 
     class Meta:
@@ -49,14 +54,12 @@ class ProductReviewsSerializer(serializers.ModelSerializer):
         fields = ['id', 'title', 'price', 'rating', 'reviews']
     
     def get_rating(self, product):
-        # Получаем значение `rating`, аннотированное во View, и округляем его
         if hasattr(product, 'rating') and product.rating is not None:
             return round(product.rating, 2)
         return 0.0
 
 # 3. Сериализатор для категорий с количеством товаров (Эндпоинт: /categories/)
 class CategoryProductCountSerializer(serializers.ModelSerializer):
-    # Вычисляемое поле для количества товаров
     products_count = serializers.SerializerMethodField()
 
     class Meta:
@@ -64,7 +67,6 @@ class CategoryProductCountSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'products_count'] 
     
     def get_products_count(self, category):
-        # Получаем значение `products_count`, аннотированное во View
         if hasattr(category, 'products_count'):
             return category.products_count
         return 0

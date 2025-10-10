@@ -1,59 +1,62 @@
-"""
-URL configuration for shop_api project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/5.2/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
+# shop_api/urls.py (ИСПРАВЛЕННЫЙ)
 from django.contrib import admin
 from django.urls import path
-from product import views
+from product import views # Ваш импорт views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
 
     # Categories
-    # 1. ОБНОВЛЕННЫЙ ПУТЬ: /api/v1/categories/ теперь использует View с подсчетом товаров
+    # 1. Списковый/Создание: GET (с count) и POST
     path(
         'api/v1/categories/', 
-        views.CategoryProductCountListView.as_view(), 
-        name='category-list-with-count'
+        # ИСПРАВЛЕНИЕ: Заменяем CategoryProductCountListView на CategoryListCreateView
+        views.CategoryListCreateView.as_view(), 
+        name='category-list-create'
     ),
+    # 2. Детальный/Изменение/Удаление: GET, PUT, PATCH, DELETE
     path(
         'api/v1/categories/<int:pk>/', 
-        views.CategoryDetailView.as_view(), 
-        name='category-detail'
+        # ИСПРАВЛЕНИЕ: Заменяем CategoryDetailView на CategoryRetrieveUpdateDestroyView
+        views.CategoryRetrieveUpdateDestroyView.as_view(), 
+        name='category-retrieve-update-destroy'
     ),
 
     # Products
-    # 2. НОВЫЙ ПУТЬ: /api/v1/products/reviews/ для вывода продуктов с рейтингом
+    # 3. Товары с отзывами и рейтингом (Только GET)
     path(
         'api/v1/products/reviews/', 
         views.ProductReviewsListView.as_view(), 
         name='product-list-with-reviews'
     ),
-    # Старый путь для стандартного списка продуктов остается
+    # 4. Списковый/Создание: GET list, POST create
     path(
         'api/v1/products/', 
-        views.ProductListView.as_view(), 
-        name='product-list'
+        # ИСПРАВЛЕНИЕ: Заменяем ProductListView на ProductListCreateView
+        views.ProductListCreateView.as_view(), 
+        name='product-list-create'
     ),
+    # 5. Детальный/Изменение/Удаление: GET, PUT, PATCH, DELETE
     path(
         'api/v1/products/<int:pk>/', 
-        views.ProductDetailView.as_view(), 
-        name='product-detail'
+        # ИСПРАВЛЕНИЕ: Заменяем ProductDetailView на ProductRetrieveUpdateDestroyView
+        views.ProductRetrieveUpdateDestroyView.as_view(), 
+        name='product-retrieve-update-destroy'
     ),
 
     # Reviews
-    path('api/v1/reviews/', views.ReviewListView.as_view(), name='review-list'),
-    path('api/v1/reviews/<int:pk>/', views.ReviewDetailView.as_view(), name='review-detail'),
+    # 6. Списковый/Создание: GET list, POST create
+    path(
+        'api/v1/reviews/', 
+        # ИСПРАВЛЕНИЕ: Заменяем ReviewListView на ReviewListCreateView
+        views.ReviewListCreateView.as_view(), 
+        name='review-list-create'
+    ),
+    # 7. Детальный/Изменение/Удаление: GET, PUT, PATCH, DELETE
+    path(
+        'api/v1/reviews/<int:pk>/', 
+        # ИСПРАВЛЕНИЕ: Заменяем ReviewDetailView на ReviewRetrieveUpdateDestroyView
+        views.ReviewRetrieveUpdateDestroyView.as_view(), 
+        name='review-retrieve-update-destroy'
+    ),
 ]
