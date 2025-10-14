@@ -1,5 +1,5 @@
-# views.py
-from rest_framework import generics
+from rest_framework import generics, status
+from rest_framework.response import Response
 from django.db.models import Count, Avg
 from .models import Category, Product, Review
 from .serializers import (
@@ -10,77 +10,80 @@ from .serializers import (
     ReviewSerializer
 )
 
+
 # -----------------------------------------------------------
-# Categories: Добавляем создание, изменение и удаление
+# CATEGORIES
 # -----------------------------------------------------------
 
-# Эндпоинт: /api/v1/categories/
-# Обеспечивает: GET (список с products_count) и POST (создание)
+# /api/v1/categories/
 class CategoryListCreateView(generics.ListCreateAPIView):
-    # Для GET-запроса (списка) используем сериализатор с products_count
     def get_queryset(self):
-        # Используем аннотирование (Count) для подсчета товаров в каждой категории
+        # Подсчёт количества товаров в каждой категории
         return Category.objects.annotate(products_count=Count('products'))
-    
+
     def get_serializer_class(self):
-        # Для LIST (GET) используем сериализатор с количеством товаров
         if self.request.method == 'GET':
             return CategoryProductCountSerializer
-        # Для CREATE (POST) используем базовый сериализатор для записи
         return CategorySerializer
 
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)  # вызывает validate_* из сериализатора
+        self.perform_create(serializer)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-# Эндпоинт: /api/v1/categories/<int:pk>/
-# Обеспечивает: GET (один), PUT/PATCH (изменение), DELETE (удаление)
+
+# /api/v1/categories/<int:pk>/
 class CategoryRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    # lookup_field по умолчанию 'pk', но можно использовать 'id'
-    # Если в URL /<int:id>/, то нужно было бы установить: lookup_field = 'id'
 
 
 # -----------------------------------------------------------
-# Products: Добавляем создание, изменение и удаление
+# PRODUCTS
 # -----------------------------------------------------------
 
-# Эндпоинт: /api/v1/products/
-# Обеспечивает: GET (список) и POST (создание)
+# /api/v1/products/
 class ProductListCreateView(generics.ListCreateAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
 
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)  # Проверка всех правил из serializers.py
+        self.perform_create(serializer)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-# Эндпоинт: /api/v1/products/<int:pk>/
-# Обеспечивает: GET (один), PUT/PATCH (изменение), DELETE (удаление)
+
+# /api/v1/products/<int:pk>/
 class ProductRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
 
 
-# Отдельный эндпоинт для списка товаров с отзывами и рейтингом
-# Эндпоинт: /api/v1/products/reviews/ (или /api/v1/product-reviews/)
+# /api/v1/products/reviews/
 class ProductReviewsListView(generics.ListAPIView):
-    # Используем аннотирование (Avg) для вычисления среднего балла (stars)
     queryset = Product.objects.annotate(rating=Avg('reviews__stars'))
     serializer_class = ProductReviewsSerializer
 
 
 # -----------------------------------------------------------
-# Reviews: Добавляем создание, изменение и удаление
+# REVIEWS
 # -----------------------------------------------------------
 
-# Эндпоинт: /api/v1/reviews/
-# Обеспечивает: GET (список) и POST (создание)
+# /api/v1/reviews/
 class ReviewListCreateView(generics.ListCreateAPIView):
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
 
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)  # Проверка: text, stars, product_id
+        self.perform_create(serializer)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-# Эндпоинт: /api/v1/reviews/<int:pk>/
-# Обеспечивает: GET (один), PUT/PATCH (изменение), DELETE (удаление)
+
+# /api/v1/reviews/<int:pk>/
 class ReviewRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
-
-# Удалены старые классы (CategoryDetailView, ProductDetailView, ReviewListView, ReviewDetailView),
-# так как их функционал теперь включен в новые классы.
