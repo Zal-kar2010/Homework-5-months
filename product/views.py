@@ -17,24 +17,29 @@ from .serializers import (
 
 # /api/v1/categories/
 class CategoryListCreateView(generics.ListCreateAPIView):
+    """
+    Получение списка категорий с подсчётом товаров (GET)
+    и создание новой категории (POST).
+    """
     def get_queryset(self):
         # Подсчёт количества товаров в каждой категории
         return Category.objects.annotate(products_count=Count('products'))
 
     def get_serializer_class(self):
+        # Используем разный сериализатор для GET и POST
         if self.request.method == 'GET':
             return CategoryProductCountSerializer
         return CategorySerializer
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)  # вызывает validate_* из сериализатора
-        self.perform_create(serializer)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+    # Метод create не переопределяем, так как стандартная логика DRF
+    # (валидация -> perform_create -> 201 Response) подходит.
 
 
 # /api/v1/categories/<int:pk>/
 class CategoryRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    Получение, обновление и удаление конкретной категории.
+    """
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
@@ -45,25 +50,31 @@ class CategoryRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
 
 # /api/v1/products/
 class ProductListCreateView(generics.ListCreateAPIView):
+    """
+    Получение списка товаров и создание нового товара.
+    """
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)  # Проверка всех правил из serializers.py
-        self.perform_create(serializer)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+    # Метод create не переопределяем, так как стандартная логика DRF подходит.
 
 
 # /api/v1/products/<int:pk>/
 class ProductRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    Получение, обновление и удаление конкретного товара.
+    """
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
 
 
 # /api/v1/products/reviews/
 class ProductReviewsListView(generics.ListAPIView):
-    queryset = Product.objects.annotate(rating=Avg('reviews__stars'))
+    """
+    Получение списка товаров с их отзывами и средней оценкой.
+    """
+    # Добавляем аннотацию для расчета средней оценки
+    queryset = Product.objects.annotate(rating=Avg('reviews__stars')) 
     serializer_class = ProductReviewsSerializer
 
 
@@ -73,17 +84,19 @@ class ProductReviewsListView(generics.ListAPIView):
 
 # /api/v1/reviews/
 class ReviewListCreateView(generics.ListCreateAPIView):
+    """
+    Получение списка отзывов и создание нового отзыва.
+    """
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)  # Проверка: text, stars, product_id
-        self.perform_create(serializer)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+    # Метод create не переопределяем, так как стандартная логика DRF подходит.
 
 
 # /api/v1/reviews/<int:pk>/
 class ReviewRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    Получение, обновление и удаление конкретного отзыва.
+    """
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
